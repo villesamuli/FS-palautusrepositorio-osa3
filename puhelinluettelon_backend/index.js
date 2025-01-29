@@ -36,7 +36,7 @@ const Info = (personsInBook, dateTime) => {
 }
 
 app.get('/info', (request, response) => {
-  const personsInBook = Object.keys(persons).length
+  const personsInBook = persons.length
   const date = Date()
   response.send(Info(personsInBook, date))
 })
@@ -61,6 +61,46 @@ app.delete('/api/persons/:id', (request, response) => {
   persons = persons.filter(p => p.id !== id)
 
   response.status(204).end()
+})
+
+const generateId = () => {
+  return Math.floor(Math.random() * 100000)
+}
+
+app.post('/api/persons', (request, response) => {
+  const body = request.body
+
+  if (!body.name) {
+    return response.status(400).json({
+      error: 'name missing'
+    })
+  }
+
+  if (!body.number) {
+    return response.status(400).json({
+      error: 'number missing'
+    })
+  }
+
+  const checkDuplicateName = (name) => {
+    const value = persons.find(p => p.name.toLowerCase() === name.toLowerCase())
+    return value
+  }
+
+  if (checkDuplicateName(body.name)) {
+    return response.status(400).json({
+      error: 'name already in phonebook, lettersize does not matter'
+    })
+  }
+
+  const person = {
+    name: body.name,
+    number: body.number,
+    id: generateId(),
+  }
+  persons = persons.concat(person)
+
+  response.json(person)
 })
 
 const PORT = 3001
