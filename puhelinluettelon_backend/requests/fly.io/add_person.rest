@@ -1,0 +1,7 @@
+POST https://puhelinluettelon-backend-crimson-frog-2048.fly.dev/api/persons
+Content-Type: application/json
+
+{
+  "name":"Vilbort4",
+  "number": "5533255"
+}

@@ -1,0 +1,9 @@
+POST https://puhelinluettelon-backend-crimson-frog-2048.fly.dev/api/persons
+Content-Type: application/json
+
+{
+  "name":"Duplicate Danny",
+  "number": 1234
+}
+
+// post twice to see what happens

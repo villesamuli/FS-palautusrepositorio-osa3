@@ -1,4 +1,5 @@
-POST http://localhost:3001/api/persons
+POST https://puhelinluettelon-backend-crimson-frog-2048.fly.dev/
+
 Content-Type: application/json
 
 {
