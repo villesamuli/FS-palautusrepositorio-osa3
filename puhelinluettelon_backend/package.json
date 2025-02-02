@@ -12,12 +12,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:ui": "@powershell Remove-Item -Recurse -Force dist && cd C:/Users/ville/Documents/Yliopisto/FullStack/FullStack-palautusrepositorio/osa2/puhelinluettelo && npm run build && @powershell Copy-Item dist -Recurse C:/Users/ville/Documents/Yliopisto/FullStack/FullStack-palautusrepositorio-osa3/puhelinluettelon_backend",
     "deploy": "fly deploy",
-    "deploy:full": "npm run build:ui && npm run deploy",    
+    "deploy:full": "npm run build:ui && npm run deploy",
     "logs:prod": "fly logs"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "mongodb": "^6.13.0",
+    "mongoose": "^8.9.6",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
