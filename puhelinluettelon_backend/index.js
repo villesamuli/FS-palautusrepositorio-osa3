@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 
@@ -6,75 +7,51 @@ morgan.token('body', function (req, res) { return JSON.stringify(req.body)})
 const morganLogFormat = ':method :url :status :res[content-length] - :response-time ms :body'
 
 const app = express()
+const Person = require('./models/person')
 
 app.use(express.static('dist'))
 app.use(cors())
 app.use(express.json())
 app.use(morgan(morganLogFormat))
 
-let persons = [
-    {
-      id: "1",
-      name: "Arto Hellas",
-      number: "040-123456"
-    },
-    {
-      id: "2",
-      name: "Ada Lovelace",
-      number: "39-44-5323523"
-    },
-    {
-      id: "3",
-      name: "Dan Abramov",
-      number: "12-43-234345"
-    },
-    {
-      id: "4",
-      name: "Mary Poppendieck",
-      number: "39-23-6423122"
-    }
-]
 
-const Info = (personsInBook, dateTime) => {
-  return (`<div>
-    <p>Phonebook has info for ${personsInBook} people</p>
-    <p>${dateTime}</p>
-    </div>
-    `
-  )
-}
+// const Info = (personsInBook, dateTime) => {
+//   return (`<div>
+//     <p>Phonebook has info for ${personsInBook} people</p>
+//     <p>${dateTime}</p>
+//     </div>
+//     `
+//   )
+// }
 
-app.get('/info', (request, response) => {
-  const personsInBook = persons.length
-  const date = Date()
-  response.send(Info(personsInBook, date))
-})
+// app.get('/info', (request, response) => {
+//   const personsInBook = persons.length
+//   const date = Date()
+//   response.send(Info(personsInBook, date))
+// })
 
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then(people => {
+    response.json(people)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = request.params.id
-  const person = persons.find(p => p.id === id)
-
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
+  Person.findById(request.params.id).then(person => {
+    if (person) {
+      response.json(person)
+    } else {
+      response.status(404).end()
+    }
+  })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-  const id = request.params.id
-  persons = persons.filter(p => p.id !== id)
-
+  Person.deleteOne({ _id:request.params.id}).then((result) => {
+    response.status(204).end
+  })
   response.status(204).end()
 })
-
-const generateId = () => {
-  return Math.floor(Math.random() * 100000)
-}
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
@@ -92,9 +69,14 @@ app.post('/api/persons', (request, response) => {
   }
 
   const checkDuplicateName = (name) => {
-    const value = persons.find(p => p.name.toLowerCase() === name.toLowerCase())
-    return value
+    Person.find({ name: name }).then(p => {
+      if (p.name === name) {
+        return true
+      }
+    })
+    return false
   }
+
 
   if (checkDuplicateName(body.name)) {
     return response.status(400).json({
@@ -102,17 +84,23 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  const person = {
+  const person = new Person({
     name: body.name,
     number: body.number,
-    id: generateId(),
-  }
-  persons = persons.concat(person)
-
-  response.json(person)
+  })
+  
+  person.save().then(savedPerson => {
+    response.json(savedPerson)
+  })
 })
 
-const PORT = process.env.PORT || 3001
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
