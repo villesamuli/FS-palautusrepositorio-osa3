@@ -15,28 +15,31 @@ app.use(express.json())
 app.use(morgan(morganLogFormat))
 
 
-// const Info = (personsInBook, dateTime) => {
-//   return (`<div>
-//     <p>Phonebook has info for ${personsInBook} people</p>
-//     <p>${dateTime}</p>
-//     </div>
-//     `
-//   )
-// }
+const Info = (personsInBook, dateTime) => {
+  return (`<div>
+    <p>Phonebook has info for ${personsInBook} people</p>
+    <p>${dateTime}</p>
+    </div>
+    `
+  )
+}
 
-// app.get('/info', (request, response) => {
-//   const personsInBook = persons.length
-//   const date = Date()
-//   response.send(Info(personsInBook, date))
-// })
+app.get('/info', (request, response, next) => {
+  const date = Date()
+  Person.countDocuments({}).then(count => {
+    response.send(Info(count, date))
+  })
+  .catch(error => next(error))
+})
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   Person.find({}).then(people => {
     response.json(people)
   })
+  .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id).then(person => {
     if (person) {
       response.json(person)
@@ -44,16 +47,18 @@ app.get('/api/persons/:id', (request, response) => {
       response.status(404).end()
     }
   })
+  .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-  Person.deleteOne({ _id:request.params.id}).then((result) => {
-    response.status(204).end
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(result => {
+    response.status(204).end()
   })
-  response.status(204).end()
+  .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name) {
@@ -74,6 +79,7 @@ app.post('/api/persons', (request, response) => {
         return true
       }
     })
+    .catch(error => next(error))
     return false
   }
 
@@ -92,7 +98,9 @@ app.post('/api/persons', (request, response) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
+  .catch(error => next(error))
 })
+
 
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
@@ -100,6 +108,17 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id'})
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
