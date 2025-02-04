@@ -35,8 +35,8 @@ if (process.argv.length === 5) {
     name: process.argv[3],
     number: process.argv[4],
   })
-  
-  person.save().then(people => {
+
+  person.save().then(() => {
     console.log('Phonenumber saved!')
     mongoose.connection.close()
   })
